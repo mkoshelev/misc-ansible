@@ -1,0 +1,21 @@
+#
+# Bug when using undefined variable as part of filename in vars_files.
+# As the file in question doesn't exists, ansible is expected to stop on error.
+# Instead, no message is provided at all and import is silently ignored.
+#
+# This issue seems to be present in all version
+
+
+- name: demonstrate bug with var_files and undefined variable
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars_files:
+  - "vars/vars_{{ undefined_var }}.yml"
+
+  tasks:
+
+  - name: report run results
+    debug: msg="paybook started despite non-existing file included in vars_files, no error|warning|any message is shown"
+

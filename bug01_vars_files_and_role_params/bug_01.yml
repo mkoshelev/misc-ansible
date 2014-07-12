@@ -1,0 +1,32 @@
+#
+# This is kinda corner case - as it requires quite specific planets alignment to manifest (see below).
+# But if you happend to accidentally trigger it, results are quite funny and may be not immediately obvious.
+#
+# This bug seems to affect role variables priority in such way that variables defined in 'vars'
+# cannot be overrided by role parameters (variables defined in 'defaults' are not affected)
+#
+# This issue was introduced in v.1.6.2
+# What is required for this bug to manifest:
+# - var_files first import should be the filename based on undefined var - this file doesn't exist, but defaults file is used instead
+# - var_files second import shoudl be the filename based on var from group|host|inventory - this file should exist
+# - content of the imported files doesn't matter but second imported file should specify at least one var
+
+
+- name: demonstrate bug with var_files and role parameters
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars_files:
+  - [ "vars/vars01_{{ undefined_var }}.yml", "vars/vars01_defaults.yml" ]
+  - [ "vars/vars02_{{ inv_var }}.yml", "vars/vars02_defaults.yml" ]
+
+  # in 'test' role, 'v1' is defined in role defaults, 'v2' is defined in role vars
+  roles:
+   - { role: test, v1: "from PLAY", v2: "from PLAY" }
+
+  tasks:
+
+  - name: report run results
+    debug: msg="try to comment the first import in var_files - bot variables should be reported as 'from play' then"
+
